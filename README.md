@@ -7,6 +7,7 @@ Features i plan to add (hopefully)
 - Better search results
 - A page feature 
 - Search filters (search for channels, playlists, Upload date, etc.)
+- better UI/UX
 ---------------------------------
 
 Feel free to contribute
