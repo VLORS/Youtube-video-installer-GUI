@@ -1,4 +1,7 @@
 import os
+from ctypes import windll
+from sys import executable , argv
+import winreg
 import customtkinter as ctk
 from customtkinter import filedialog, CTkCanvas, CTkEntry, CTkLabel, CTkButton, CTkCheckBox, CTkScrollableFrame, CTkImage, CTkFrame
 from tkinter import PhotoImage, messagebox
@@ -100,8 +103,6 @@ def main_function():
     root.mainloop()
     return path_entry, search_query_entry, root, image_scroll, audio_only
 
-
-
 # make blue thing background
 def draw_gradient(canvas, width, height):
     for i in range(height):
@@ -121,8 +122,11 @@ def browse_button_clicked(path_entry):
     path_entry.insert(index=0, string=file_chosen)
     return path_entry
 
+# Define the registry key path
+REG_PATH = r"Software\YouTubeInstaller"
 
-def set_as_default(path_entry): # makes a txt file for the path entered to be retrieved when the app opens
+def set_as_default(path_entry): # set default download path and store it in reg
+  
     default_path = path_entry.get()
     if not default_path:
         messagebox.showwarning('Path error', 'You need to type a path to set it as default')
@@ -130,21 +134,26 @@ def set_as_default(path_entry): # makes a txt file for the path entered to be re
         if not default_path.endswith(os.sep):
             default_path += os.sep
         try:
-            with open("download_path.txt", 'w') as file_path:
-                file_path.write(default_path)
+            # create or open reg
+            with winreg.CreateKey(winreg.HKEY_CURRENT_USER, REG_PATH) as reg_key:
+                winreg.SetValueEx(reg_key, "DefaultPath", 0, winreg.REG_SZ, default_path)
         except Exception as err:
-            messagebox.showwarning('default_path error', message = err)
-    
+            messagebox.showwarning('Error', f'Failed to save path in registry: {err}')
 
+def check_default_path(path_entry): # checks for a default path in reg and load it
 
-def check_default_path(path_entry): # check for the txt file above
-    if os.path.exists('download_path.txt'):
-        with open('download_path.txt', 'r') as default_path:
-            default_path_content = default_path.read()
-            if default_path_content:
+    try:
+        # open reg key and read 
+        with winreg.OpenKey(winreg.HKEY_CURRENT_USER, REG_PATH, 0, winreg.KEY_READ) as reg_key:
+            default_path, _ = winreg.QueryValueEx(reg_key, "DefaultPath")
+            if default_path:
                 path_entry.delete(0, ctk.END)
-                path_entry.insert(0, default_path_content)
-
+                path_entry.insert(0, default_path)
+    except FileNotFoundError:
+        # if reg key is not found
+        messagebox.showinfo('Info', 'No default path is set yet.')
+    except Exception as err:
+        messagebox.showwarning('Error', f'Failed to load default path: {err}')
 
 def search_threaded(search_query_entry, image_scroll, audio_only, path_entry):
     Title = search_query_entry.get()
@@ -298,3 +307,4 @@ def download_video(video_link, audio_only, path_entry, video_Title):
 
 if __name__ == '__main__':
     main_function()
+
