@@ -1,6 +1,4 @@
 import os
-from ctypes import windll
-from sys import executable , argv
 import winreg
 import customtkinter as ctk
 from customtkinter import filedialog, CTkCanvas, CTkEntry, CTkLabel, CTkButton, CTkCheckBox, CTkScrollableFrame, CTkImage, CTkFrame
